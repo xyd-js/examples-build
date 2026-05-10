@@ -1,0 +1,96 @@
+name: deploy
+
+on:
+  # Run manually from the Actions tab.
+  workflow_dispatch:
+    inputs:
+      xyd_cli_version:
+        description: '@xyd-js/cli version (e.g. 0.1.0-xyd.220 or "latest")'
+        required: false
+        default: latest
+
+  # Triggered by xyd-js/examples on push (see snippet below).
+  repository_dispatch:
+    types: [examples-updated]
+
+  # Also run on direct pushes to this repo (e.g. orchestrator changes).
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # When triggered by xyd-js/examples, override the pinned submodule
+      # commit with the latest main from that repo. The pinned SHA in this
+      # repo isn't bumped — those auto-bumps can be a separate PR.
+      - name: Use latest examples (on dispatch)
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          set -eux
+          git -C examples fetch origin
+          TARGET_SHA="${{ github.event.client_payload.sha }}"
+          if [ -n "$TARGET_SHA" ]; then
+            git -C examples checkout "$TARGET_SHA"
+          else
+            git -C examples checkout origin/main
+          fi
+          git -C examples submodule update --init --recursive
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - name: Build all examples
+        env:
+          XYD_CLI_VERSION: ${{ inputs.xyd_cli_version || 'latest' }}
+        run: bun run scripts/build-all.ts
+
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3
+        with:
+          publish-dir: dist
+          production-deploy: true
+          deploy-message: "${{ github.event_name }} (xyd-cli@${{ inputs.xyd_cli_version || 'latest' }})"
+          enable-pull-request-comment: false
+          enable-commit-comment: false
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+# ───────────────────────────────────────────────────────────────────────────
+# Companion snippet — drop in xyd-js/examples (NOT this repo)
+#
+# 1) Create a PAT (fine-grained, single-repo) with permission:
+#      "Contents: Read and write" on xyd-js/examples-build only.
+#    Add it as a secret called  EXAMPLES_BUILD_TOKEN  in xyd-js/examples.
+#
+# 2) Add this workflow to xyd-js/examples at .github/workflows/notify.yml :
+#
+#    name: notify examples-build
+#    on:
+#      push:
+#        branches: [main]
+#    jobs:
+#      dispatch:
+#        runs-on: ubuntu-latest
+#        steps:
+#          - uses: peter-evans/repository-dispatch@v3
+#            with:
+#              token: ${{ secrets.EXAMPLES_BUILD_TOKEN }}
+#              repository: xyd-js/examples-build
+#              event-type: examples-updated
+#              client-payload: |
+#                {"sha": "${{ github.sha }}", "ref": "${{ github.ref }}"}
+#
+# After that, every push to main on xyd-js/examples fires the dispatch,
+# which fires this workflow, which rebuilds and deploys.
+# ───────────────────────────────────────────────────────────────────────────

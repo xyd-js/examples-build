@@ -1,0 +1,213 @@
+{
+  "examples": [
+    {
+      "slug": "abtesting",
+      "title": "A/B Testing",
+      "description": "",
+      "mountedAt": "/abtesting",
+      "entryHref": "/abtesting",
+      "tags": [
+        "A/B testing",
+        "GrowthBook"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/abtesting"
+    },
+    {
+      "slug": "access-control-edge-jwt",
+      "title": "Edge access — JWT",
+      "description": "",
+      "mountedAt": "/access-control-edge-jwt",
+      "entryHref": "/access-control-edge-jwt/admin/dashboard",
+      "tags": [
+        "Auth",
+        "JWT",
+        "Edge"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/access-control-edge-jwt"
+    },
+    {
+      "slug": "access-control-edge-oauth",
+      "title": "Edge access — OAuth",
+      "description": "",
+      "mountedAt": "/access-control-edge-oauth",
+      "entryHref": "/access-control-edge-oauth/admin/dashboard",
+      "tags": [
+        "Auth",
+        "OAuth",
+        "Edge"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/access-control-edge-oauth"
+    },
+    {
+      "slug": "access-control-edge-password",
+      "title": "Edge access — password",
+      "description": "",
+      "mountedAt": "/access-control-edge-password",
+      "entryHref": "/access-control-edge-password/admin/dashboard",
+      "tags": [
+        "Auth",
+        "Edge"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/access-control-edge-password"
+    },
+    {
+      "slug": "access-control-jwt",
+      "title": "Access control — JWT",
+      "description": "",
+      "mountedAt": "/access-control-jwt",
+      "entryHref": "/access-control-jwt/admin/dashboard",
+      "tags": [
+        "Auth",
+        "JWT"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/access-control-jwt"
+    },
+    {
+      "slug": "access-control-oauth",
+      "title": "Access control — OAuth",
+      "description": "",
+      "mountedAt": "/access-control-oauth",
+      "entryHref": "/access-control-oauth/admin/dashboard",
+      "tags": [
+        "Auth",
+        "OAuth"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/access-control-oauth"
+    },
+    {
+      "slug": "basename",
+      "title": "Custom basename",
+      "description": "",
+      "mountedAt": "/my-base",
+      "entryHref": "/my-base/api-reference/createUser",
+      "tags": [
+        "Routing"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/basename"
+    },
+    {
+      "slug": "custom-icons",
+      "title": "Custom Icons",
+      "description": "",
+      "mountedAt": "/custom-icons",
+      "entryHref": "/custom-icons",
+      "tags": [
+        "Theming"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/custom-icons"
+    },
+    {
+      "slug": "custom-js",
+      "title": "Custom JavaScript",
+      "description": "",
+      "mountedAt": "/custom-js",
+      "entryHref": "/custom-js/api-reference/createUser",
+      "tags": [
+        "Theming"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/custom-js"
+    },
+    {
+      "slug": "graphql",
+      "title": "GraphQL",
+      "description": "",
+      "mountedAt": "/graphql",
+      "entryHref": "/graphql/docs/api/books-api/inputs/AuthorInput",
+      "tags": [
+        "GraphQL",
+        "API"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/graphql"
+    },
+    {
+      "slug": "graphviz",
+      "title": "Graphviz",
+      "description": "",
+      "mountedAt": "/graphviz",
+      "entryHref": "/graphviz",
+      "tags": [
+        "Diagrams"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/graphviz"
+    },
+    {
+      "slug": "monday-clone",
+      "title": "Monday clone",
+      "description": "",
+      "mountedAt": "/monday-clone",
+      "entryHref": "/monday-clone/api-reference/enums/ActivateUsersErrorCode",
+      "tags": [
+        "GraphQL",
+        "Showcase"
+      ],
+      "repoUrl": "https://github.com/xyd-js/monday-clone"
+    },
+    {
+      "slug": "openai-clone",
+      "title": "OpenAI clone",
+      "description": "",
+      "mountedAt": "/openai-clone",
+      "entryHref": "/openai-clone/api-reference/admin-api-keys/create",
+      "tags": [
+        "OpenAPI",
+        "Showcase"
+      ],
+      "repoUrl": "https://github.com/xyd-js/openai-clone"
+    },
+    {
+      "slug": "openapi",
+      "title": "OpenAPI",
+      "description": "",
+      "mountedAt": "/openapi",
+      "entryHref": "/openapi/docs/api/books-api/addAuthor",
+      "tags": [
+        "OpenAPI",
+        "API"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/openapi"
+    },
+    {
+      "slug": "react-components",
+      "title": "React Components",
+      "description": "",
+      "mountedAt": "/react-components",
+      "entryHref": "/react-components",
+      "tags": [
+        "React"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/react-components"
+    },
+    {
+      "slug": "syntaxhighlight",
+      "title": "Syntax highlighting",
+      "description": "",
+      "mountedAt": "/syntaxhighlight",
+      "entryHref": "/syntaxhighlight/api/graphql/introduction",
+      "tags": [
+        "Theming"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/syntaxhighlight"
+    },
+    {
+      "slug": "vite-custom-configuration",
+      "title": "Vite Custom Configuration",
+      "description": "",
+      "mountedAt": "/vite-custom-configuration",
+      "entryHref": "/vite-custom-configuration/introduction",
+      "tags": [
+        "Vite"
+      ],
+      "repoUrl": "https://github.com/xyd-js/examples/tree/master/vite-custom-configuration"
+    }
+  ],
+  "featuredSlugs": [
+    "vite-custom-configuration",
+    "access-control-edge-jwt",
+    "access-control-edge-oauth",
+    "access-control-edge-password",
+    "access-control-jwt",
+    "access-control-oauth"
+  ],
+  "cliVersion": "latest",
+  "examplesSha": "610132429ade9344f83a50d0838d28589f78d9cc"
+}

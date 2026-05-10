@@ -1,0 +1,6 @@
+[build]
+  command = "bun install && bun run scripts/build-all.ts"
+  publish = "dist"
+
+[build.environment]
+  XYD_CLI_VERSION = "latest"

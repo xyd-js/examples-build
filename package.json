@@ -1,0 +1,19 @@
+{
+  "name": "examples-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun run scripts/build-all.ts",
+    "build:only": "bun run scripts/build-all.ts --only=",
+    "serve": "bunx serve dist -p 4321",
+    "dev": "bun run scripts/build-all.ts && bunx serve dist -p 4321",
+    "discover": "bun run scripts/discover.ts",
+    "landing": "cd landing && bun run build.ts",
+    "landing:watch": "cd landing && bun --watch run build.ts",
+    "landing:dev": "bun run landing && bunx serve dist -p 4321"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.0"
+  }
+}

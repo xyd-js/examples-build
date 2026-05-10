@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.work/
+.cli-cache/
+.DS_Store
+bun.lock
+bun.lockb
