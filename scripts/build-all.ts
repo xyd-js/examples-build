@@ -15,10 +15,12 @@ import { discover, type Example } from "./discover.ts";
 import { setBasename } from "./set-basename.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
-const EXAMPLES_DIR = join(ROOT, "examples");
+const EXAMPLES_CACHE = join(ROOT, ".examples-cache");
+const EXAMPLES_DIR = join(EXAMPLES_CACHE, "examples");
 const DIST_DIR = join(ROOT, "dist");
 const LANDING_DIR = join(ROOT, "landing");
 
+const EXAMPLES_REPO_URL = "https://github.com/xyd-js/examples";
 const XYD_CLI_VERSION = process.env.XYD_CLI_VERSION ?? "latest";
 
 type BuildResult =
@@ -31,6 +33,7 @@ async function main() {
   rmSync(DIST_DIR, { recursive: true, force: true });
   mkdirSync(DIST_DIR, { recursive: true });
 
+  await prepareExamplesRepo();
   const xydBin = await prepareXydCli();
 
   const all = discover(EXAMPLES_DIR);
@@ -154,6 +157,103 @@ async function buildOne(ex: Example, xydBin: string): Promise<BuildResult> {
     writeFileSync(docsPath, originalDocs);
     rmSync(xydBuild, { recursive: true, force: true });
   }
+}
+
+async function prepareExamplesRepo(): Promise<void> {
+  const branch = resolveExamplesBranch();
+  console.log(`▶ preparing examples repo at ${EXAMPLES_DIR} (branch: ${branch})`);
+
+  if (!remoteBranchExists(branch)) {
+    throw new Error(
+      `branch "${branch}" not found on ${EXAMPLES_REPO_URL}. ` +
+        `Create the branch in the examples repo or override with EXAMPLES_BRANCH / --examples-branch=<name>.`,
+    );
+  }
+
+  mkdirSync(EXAMPLES_CACHE, { recursive: true });
+
+  if (!existsSync(join(EXAMPLES_DIR, ".git"))) {
+    // Fresh clone with nested submodules (monday-clone, openai-clone, ...).
+    const code = await runCaptured(
+      "git",
+      [
+        "clone",
+        "--recurse-submodules",
+        "--shallow-submodules",
+        "--depth=1",
+        "--branch",
+        branch,
+        EXAMPLES_REPO_URL,
+        EXAMPLES_DIR,
+      ],
+      EXAMPLES_CACHE,
+      "[examples-clone]",
+    );
+    if (code !== 0) throw new Error(`failed to clone ${EXAMPLES_REPO_URL}@${branch}`);
+  } else {
+    // Cache exists: fetch and align with origin/<branch>.
+    const fetchCode = await runCaptured(
+      "git",
+      ["fetch", "--depth=1", "origin", branch],
+      EXAMPLES_DIR,
+      "[examples-fetch]",
+    );
+    if (fetchCode !== 0) throw new Error(`failed to fetch ${branch} in examples cache`);
+
+    const checkoutCode = await runCaptured(
+      "git",
+      ["checkout", "-B", branch, `origin/${branch}`],
+      EXAMPLES_DIR,
+      "[examples-checkout]",
+    );
+    if (checkoutCode !== 0) throw new Error(`failed to checkout ${branch} in examples cache`);
+
+    const subCode = await runCaptured(
+      "git",
+      ["submodule", "update", "--init", "--recursive", "--depth=1"],
+      EXAMPLES_DIR,
+      "[examples-submodule]",
+    );
+    if (subCode !== 0) throw new Error(`failed to update nested submodules in examples cache`);
+  }
+
+  const sha = spawnSync("git", ["-C", EXAMPLES_DIR, "rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).stdout?.trim();
+  console.log(`✔ examples ready: ${branch}@${sha?.slice(0, 7) ?? "?"}`);
+}
+
+function resolveExamplesBranch(): string {
+  const argv = process.argv.find((a) => a.startsWith("--examples-branch="));
+  if (argv) return argv.slice("--examples-branch=".length);
+  if (process.env.EXAMPLES_BRANCH) return process.env.EXAMPLES_BRANCH;
+
+  const r = spawnSync("git", ["-C", ROOT, "rev-parse", "--abbrev-ref", "HEAD"], {
+    encoding: "utf8",
+  });
+  const head = r.stdout?.trim();
+  if (head && head !== "HEAD") return head;
+
+  // Detached HEAD (common in CI). Try CI env hints.
+  const ci =
+    process.env.BRANCH || // Netlify, Vercel
+    process.env.GITHUB_REF_NAME || // GitHub Actions
+    process.env.CI_COMMIT_BRANCH; // GitLab CI
+  if (ci) return ci;
+
+  throw new Error(
+    "could not determine parent branch (detached HEAD). " +
+      "Set EXAMPLES_BRANCH or pass --examples-branch=<name>.",
+  );
+}
+
+function remoteBranchExists(branch: string): boolean {
+  const r = spawnSync(
+    "git",
+    ["ls-remote", "--exit-code", "--heads", EXAMPLES_REPO_URL, branch],
+    { encoding: "utf8" },
+  );
+  return r.status === 0;
 }
 
 async function prepareXydCli(): Promise<string> {
@@ -321,7 +421,7 @@ function pickFeatured(
   count: number,
 ): string[] {
   if (override.length > 0) return override.slice(0, count);
-  // Most-recently-touched in the examples submodule.
+  // Most-recently-touched in the examples repo.
   const r = spawnSync(
     "git",
     [
