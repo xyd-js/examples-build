@@ -174,13 +174,12 @@ async function prepareExamplesRepo(): Promise<void> {
 
   if (!existsSync(join(EXAMPLES_DIR, ".git"))) {
     // Fresh clone with nested submodules (monday-clone, openai-clone, ...).
+    // No --depth limit: submodules pin specific SHAs that shallow clones can't reach.
     const code = await runCaptured(
       "git",
       [
         "clone",
         "--recurse-submodules",
-        "--shallow-submodules",
-        "--depth=1",
         "--branch",
         branch,
         EXAMPLES_REPO_URL,
@@ -194,7 +193,7 @@ async function prepareExamplesRepo(): Promise<void> {
     // Cache exists: fetch and align with origin/<branch>.
     const fetchCode = await runCaptured(
       "git",
-      ["fetch", "--depth=1", "origin", branch],
+      ["fetch", "origin", branch],
       EXAMPLES_DIR,
       "[examples-fetch]",
     );
@@ -210,7 +209,7 @@ async function prepareExamplesRepo(): Promise<void> {
 
     const subCode = await runCaptured(
       "git",
-      ["submodule", "update", "--init", "--recursive", "--depth=1"],
+      ["submodule", "update", "--init", "--recursive"],
       EXAMPLES_DIR,
       "[examples-submodule]",
     );
@@ -346,14 +345,21 @@ function pickEntryHref(
 }
 
 function findFirstHtml(dir: string): string | null {
-  for (const name of readdirSync(dir).sort()) {
+  // Prefer HTML at this level before descending: for i18n examples,
+  // the default language emits at the slug root (e.g. `i18n/introduction.html`)
+  // while non-default languages get a `<lang>/` subdir. Descending first would
+  // land us on a non-default locale's page.
+  const entries = readdirSync(dir).sort();
+  const subdirs: string[] = [];
+  for (const name of entries) {
     const p = join(dir, name);
     const st = statSync(p);
     if (st.isFile() && p.endsWith(".html")) return p;
-    if (st.isDirectory()) {
-      const found = findFirstHtml(p);
-      if (found) return found;
-    }
+    if (st.isDirectory()) subdirs.push(p);
+  }
+  for (const sub of subdirs) {
+    const found = findFirstHtml(sub);
+    if (found) return found;
   }
   return null;
 }
