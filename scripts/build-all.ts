@@ -426,8 +426,11 @@ function pickFeatured(
   override: string[],
   count: number,
 ): string[] {
-  if (override.length > 0) return override.slice(0, count);
-  // Most-recently-touched in the examples repo.
+  // Pinned slugs from `override` always appear first (filtered to those that
+  // actually built successfully). Remaining slots are filled with the
+  // most-recently-touched examples in the examples repo, then any leftovers.
+  const pinned = override.filter((s) => allSlugs.includes(s));
+
   const r = spawnSync(
     "git",
     [
@@ -440,22 +443,36 @@ function pickFeatured(
     ],
     { encoding: "utf8" },
   );
-  if (!r.stdout) return allSlugs.slice(0, count);
-  const seen = new Map<string, number>();
-  let lastTs = 0;
-  for (const line of r.stdout.split("\n")) {
-    if (/^\d+$/.test(line)) {
-      lastTs = parseInt(line, 10);
-      continue;
+  const recent: string[] = [];
+  if (r.stdout) {
+    const seen = new Map<string, number>();
+    let lastTs = 0;
+    for (const line of r.stdout.split("\n")) {
+      if (/^\d+$/.test(line)) {
+        lastTs = parseInt(line, 10);
+        continue;
+      }
+      const top = line.split("/")[0];
+      if (top && allSlugs.includes(top) && !seen.has(top)) {
+        seen.set(top, lastTs);
+      }
     }
-    const top = line.split("/")[0];
-    if (top && allSlugs.includes(top) && !seen.has(top)) {
-      seen.set(top, lastTs);
+    for (const [s] of [...seen.entries()].sort((a, b) => b[1] - a[1])) {
+      recent.push(s);
     }
   }
-  const sorted = [...seen.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
-  for (const s of allSlugs) if (!sorted.includes(s)) sorted.push(s);
-  return sorted.slice(0, count);
+
+  const out: string[] = [...pinned];
+  const used = new Set(out);
+  for (const s of recent) {
+    if (out.length >= count) break;
+    if (!used.has(s)) { out.push(s); used.add(s); }
+  }
+  for (const s of allSlugs) {
+    if (out.length >= count) break;
+    if (!used.has(s)) { out.push(s); used.add(s); }
+  }
+  return out.slice(0, count);
 }
 
 // Parse the examples submodule's .gitmodules to find sub-submodules

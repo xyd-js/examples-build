@@ -8,6 +8,7 @@ export const popularTags: string[] = [
   "Auth",
   "MCP",
   "React",
+  "Internationalization",
 ];
 
 // slug → tags. Slugs missing from this map render with no tags.
@@ -25,6 +26,12 @@ export const tagsBySlug: Record<string, string[]> = {
   "custom-js": ["Theming"],
   graphql: ["GraphQL", "API"],
   graphviz: ["Diagrams"],
+  i18n: ["Internationalization"],
+  "i18n-catalog-overrides": ["Internationalization", "Catalogs", "Overrides"],
+  "i18n-catalogs": ["Internationalization", "Catalogs"],
+  "i18n-catalogs-custom-paths": ["Internationalization", "Catalogs"],
+  "i18n-overrides": ["Internationalization", "Overrides"],
+  "i18n-overrides-flat": ["Internationalization", "Overrides"],
   mcp: ["MCP", "AI"],
   "monday-clone": ["GraphQL", "Showcase"],
   "openai-clone": ["OpenAPI", "Showcase"],
@@ -34,7 +41,9 @@ export const tagsBySlug: Record<string, string[]> = {
   "vite-custom-configuration": ["Vite"],
 };
 
-// Optional. Empty = auto-pick most recently touched examples in git.
-export const featuredOverride: string[] = [];
+// Pinned-first featured slots. Slugs listed here always appear at the top of
+// the featured list (in order); the remaining slots are auto-filled with the
+// most-recently-touched examples in the examples repo.
+export const featuredOverride: string[] = ["i18n"];
 
 export const featuredCount = 6;
