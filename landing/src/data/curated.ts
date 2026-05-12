@@ -43,7 +43,8 @@ export const tagsBySlug: Record<string, string[]> = {
 
 // Pinned-first featured slots. Slugs listed here always appear at the top of
 // the featured list (in order); the remaining slots are auto-filled with the
-// most-recently-touched examples in the examples repo.
-export const featuredOverride: string[] = ["i18n"];
+// most-recently-touched examples in the examples repo. Leave empty for a
+// fully dynamic featured row driven entirely by recent git activity.
+export const featuredOverride: string[] = [];
 
-export const featuredCount = 6;
+export const featuredCount = 8;
