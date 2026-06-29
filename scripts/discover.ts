@@ -53,6 +53,8 @@ const TITLE_OVERRIDES: Record<string, string> = {
   graphviz: "Graphviz",
   mcp: "MCP",
   "monday-clone": "Monday clone",
+  opencli: "OpenCLI",
+  "opencli-orbit": "OpenCLI (nested commands)",
   "openai-clone": "OpenAI clone",
   openapi: "OpenAPI",
   "openapi-serve": "OpenAPI Serve",
