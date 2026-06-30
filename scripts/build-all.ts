@@ -34,9 +34,14 @@ async function main() {
   mkdirSync(DIST_DIR, { recursive: true });
 
   await prepareExamplesRepo();
-  const xydBin = await prepareXydCli();
+  const { bin: xydBin, version: cliVersion } = await prepareXydCli();
 
-  const buildStamp = `xyd-js/cli@${XYD_CLI_VERSION} · examples@${examplesShortSha()}`;
+  // Show the concrete resolved version. When a channel/tag was requested
+  // (e.g. "canary"/"latest"), keep it for context: "canary (0.0.0-canary-4aef036)".
+  const requestedIsExact = /^\d/.test(XYD_CLI_VERSION);
+  const cliLabel =
+    cliVersion && !requestedIsExact ? `${XYD_CLI_VERSION} (${cliVersion})` : cliVersion ?? XYD_CLI_VERSION;
+  const buildStamp = `xyd-js/cli@${cliLabel} · examples@${examplesShortSha()}`;
   console.log(`  build stamp: ${buildStamp}`);
 
   const all = discover(EXAMPLES_DIR);
@@ -55,7 +60,7 @@ async function main() {
 
   const results = await runPool(examples, concurrency, (ex) => buildOne(ex, xydBin, buildStamp));
 
-  await writeLanding(results);
+  await writeLanding(results, cliVersion ?? XYD_CLI_VERSION);
   printReport(results);
 
   const anyFailed = results.some((r) => r.status === "failed");
@@ -266,7 +271,7 @@ function remoteBranchExists(branch: string): boolean {
   return r.status === 0;
 }
 
-async function prepareXydCli(): Promise<string> {
+async function prepareXydCli(): Promise<{ bin: string; version: string | null }> {
   const cacheDir = join(ROOT, ".cli-cache");
   const binPath = join(cacheDir, "node_modules", ".bin", "xyd");
 
@@ -293,8 +298,22 @@ async function prepareXydCli(): Promise<string> {
   if (!existsSync(binPath)) {
     throw new Error(`xyd binary not found at ${binPath} after install`);
   }
-  console.log(`✔ xyd CLI ready: ${binPath}`);
-  return binPath;
+  const version = resolvedCliVersion(cacheDir);
+  console.log(`✔ xyd CLI ready: ${binPath}${version ? ` (v${version})` : ""}`);
+  return { bin: binPath, version };
+}
+
+// The concrete @xyd-js/cli version that the requested channel/tag resolved to
+// (e.g. "canary" → "0.0.0-canary-4aef036"), read from the installed package.
+function resolvedCliVersion(cacheDir: string): string | null {
+  const pkgPath = join(cacheDir, "node_modules", "@xyd-js", "cli", "package.json");
+  if (!existsSync(pkgPath)) return null;
+  try {
+    const v = JSON.parse(readFileSync(pkgPath, "utf8")).version;
+    return typeof v === "string" && v ? v : null;
+  } catch {
+    return null;
+  }
 }
 
 async function runCaptured(
@@ -375,7 +394,7 @@ function findFirstHtml(dir: string): string | null {
   return null;
 }
 
-async function writeLanding(results: BuildResult[]) {
+async function writeLanding(results: BuildResult[], cliVersion: string) {
   const ok = results.filter(
     (r): r is Extract<BuildResult, { status: "ok" }> => r.status === "ok",
   );
@@ -410,7 +429,7 @@ async function writeLanding(results: BuildResult[]) {
       {
         examples,
         featuredSlugs,
-        cliVersion: XYD_CLI_VERSION,
+        cliVersion,
         examplesSha: sha,
       },
       null,
