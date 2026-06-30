@@ -12,7 +12,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { availableParallelism } from "node:os";
 import { discover, type Example } from "./discover.ts";
-import { setBasename } from "./set-basename.ts";
+import { setBasename, setBuildFooter } from "./set-basename.ts";
 
 const ROOT = resolve(import.meta.dir, "..");
 const EXAMPLES_CACHE = join(ROOT, ".examples-cache");
@@ -36,6 +36,9 @@ async function main() {
   await prepareExamplesRepo();
   const xydBin = await prepareXydCli();
 
+  const buildStamp = `xyd-js/cli@${XYD_CLI_VERSION} · examples@${examplesShortSha()}`;
+  console.log(`  build stamp: ${buildStamp}`);
+
   const all = discover(EXAMPLES_DIR);
   const onlyArg = process.argv.find((a) => a.startsWith("--only="));
   const onlySet = onlyArg
@@ -50,7 +53,7 @@ async function main() {
     }, concurrency=${concurrency}`,
   );
 
-  const results = await runPool(examples, concurrency, (ex) => buildOne(ex, xydBin));
+  const results = await runPool(examples, concurrency, (ex) => buildOne(ex, xydBin, buildStamp));
 
   await writeLanding(results);
   printReport(results);
@@ -103,7 +106,14 @@ function queueCopy(fn: () => void): Promise<void> {
   return next;
 }
 
-async function buildOne(ex: Example, xydBin: string): Promise<BuildResult> {
+function examplesShortSha(): string {
+  const r = spawnSync("git", ["-C", EXAMPLES_DIR, "rev-parse", "--short", "HEAD"], {
+    encoding: "utf8",
+  });
+  return r.status === 0 ? r.stdout.trim() : "unknown";
+}
+
+async function buildOne(ex: Example, xydBin: string, buildStamp: string): Promise<BuildResult> {
   const docsPath = join(ex.dir, "docs.json");
   const originalDocs = readFileSync(docsPath, "utf8");
   const xydDir = join(ex.dir, ".xyd");
@@ -119,6 +129,7 @@ async function buildOne(ex: Example, xydBin: string): Promise<BuildResult> {
     // confuses xyd's setup and trips EEXIST on .xyd/host/node_modules).
     rmSync(xydDir, { recursive: true, force: true });
     setBasename(docsPath, ex.mountedAt);
+    setBuildFooter(docsPath, buildStamp);
 
     const startedAt = Date.now();
     const exitCode = await runCaptured(xydBin, ["build"], ex.dir, tag);
